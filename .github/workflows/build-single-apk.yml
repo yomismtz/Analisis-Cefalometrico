@@ -21,6 +21,10 @@ jobs:
       - name: Apply current clinical and partial-result fixes
         run: python3 ci/prepare-test-build.py
 
+      - name: Normalize precision pad dimensions
+        run: |
+          sed -i 's/dp(1\.6f)/dp(2)/g; s/dp(5f)/dp(5)/g' app/src/main/java/com/cefalo/angulos/AnalysisActivity.java
+
       - name: Convert to single cephalometric module
         shell: bash
         run: |
