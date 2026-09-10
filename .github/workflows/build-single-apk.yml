@@ -25,6 +25,9 @@ jobs:
         run: |
           sed -i 's/dp(1\.6f)/dp(2)/g; s/dp(5f)/dp(5)/g' app/src/main/java/com/cefalo/angulos/AnalysisActivity.java
 
+      - name: Apply clinical extensions and visual guides
+        run: python3 ci/extend-clinical-build.py
+
       - name: Convert to single cephalometric module
         shell: bash
         run: |
