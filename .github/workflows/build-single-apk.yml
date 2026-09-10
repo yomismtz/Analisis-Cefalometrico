@@ -1,4 +1,4 @@
-name: Build YomCeph Cefalometrico APK
+name: Build Yom Análisis Radiográficos Steiner APK
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout audited YomCeph mobile source
+      - name: Checkout audited Yom radiographic source
         uses: actions/checkout@v4
         with:
           repository: yomismtz/-ngulos-cefalometricos
@@ -20,10 +20,6 @@ jobs:
 
       - name: Apply mobile tracing workflow
         run: python3 ci/prepare-test-build.py
-
-      - name: Normalize precision pad dimensions
-        run: |
-          sed -i 's/dp(1\.6f)/dp(2)/g; s/dp(5f)/dp(5)/g' app/src/main/java/com/cefalo/angulos/AnalysisActivity.java
 
       - name: Apply clinical extensions and visual guides
         run: python3 ci/extend-clinical-build.py
@@ -40,7 +36,19 @@ jobs:
       - name: Refine radiographic helper logic
         run: python3 ci/refine-radiographic-logic.py
 
-      - name: Convert to standalone cephalometric module
+      - name: Apply Yom branding and calibration assistant
+        run: python3 ci/mobile-brand-calibration.py
+
+      - name: Apply exact fine adjustment
+        run: python3 ci/mobile-fine-adjust.py
+
+      - name: Refine original landmark guides
+        run: python3 ci/mobile-guide-polish.py
+
+      - name: Generate dedicated tablet layout
+        run: python3 ci/mobile-responsive-layouts.py
+
+      - name: Convert to standalone Steiner module
         shell: bash
         run: |
           python3 - <<'PY'
@@ -52,26 +60,32 @@ jobs:
           g = g.replace("applicationId 'com.yomceph.app'", "applicationId 'com.yomceph.cefalometrico'")
           gradle.write_text(g, encoding='utf-8')
 
-          es = Path('app/src/main/res/values/strings.xml')
-          s = es.read_text(encoding='utf-8')
-          s = re.sub(r'<string name="app_name">.*?</string>', '<string name="app_name">YomCeph Cefalométrico</string>', s)
-          s = re.sub(r'<string name="app_slogan">.*?</string>', '<string name="app_slogan">Análisis cefalométrico móvil</string>', s)
-          s = re.sub(r'<string name="analysis_steiner">.*?</string>', '<string name="analysis_steiner">ANÁLISIS CEFALOMÉTRICO</string>', s)
-          es.write_text(s, encoding='utf-8')
-
-          en = Path('app/src/main/res/values-en/strings.xml')
-          if en.exists():
-              s = en.read_text(encoding='utf-8')
-              s = re.sub(r'<string name="app_name">.*?</string>', '<string name="app_name">YomCeph Cephalometric</string>', s)
-              s = re.sub(r'<string name="app_slogan">.*?</string>', '<string name="app_slogan">Mobile cephalometric analysis</string>', s)
-              s = re.sub(r'<string name="analysis_steiner">.*?</string>', '<string name="analysis_steiner">CEPHALOMETRIC ANALYSIS</string>', s)
-              en.write_text(s, encoding='utf-8')
+          # Keep the same Yom Análisis Radiográficos brand in both APKs.
+          # The Steiner-only edition is differentiated by its only visible module.
+          for rel in ['app/src/main/res/values/strings.xml', 'app/src/main/res/values-en/strings.xml']:
+              path = Path(rel)
+              if not path.exists():
+                  continue
+              s = path.read_text(encoding='utf-8')
+              s = re.sub(r'<string name="app_name">.*?</string>',
+                         '<string name="app_name">Yom Análisis Radiográficos</string>', s)
+              if 'values-en' in rel:
+                  s = re.sub(r'<string name="app_slogan">.*?</string>',
+                             '<string name="app_slogan">Cephalometrics and radiographic analysis</string>', s)
+                  s = re.sub(r'<string name="analysis_steiner">.*?</string>',
+                             '<string name="analysis_steiner">CEPHALOMETRIC ANALYSIS · STEINER</string>', s)
+              else:
+                  s = re.sub(r'<string name="app_slogan">.*?</string>',
+                             '<string name="app_slogan">Cefalometría y análisis radiográfico</string>', s)
+                  s = re.sub(r'<string name="analysis_steiner">.*?</string>',
+                             '<string name="analysis_steiner">ANÁLISIS CEFALOMÉTRICO · STEINER</string>', s)
+              path.write_text(s, encoding='utf-8')
 
           main = Path('app/src/main/java/com/cefalo/angulos/MainActivity.java')
           m = main.read_text(encoding='utf-8')
           anchor = '        updateThemeButton(btnTheme);\n'
-          hide = '''        // Standalone edition: keep the same mobile interface and utilities,
-        // but expose only the cephalometric lateral-skull module.
+          hide = '''        // Steiner-only edition: same tracing engine and responsive UI,
+        // but only the cephalometric lateral-skull module remains visible.
         btnVertebral.setVisibility(android.view.View.GONE);
         btnPowell.setVisibility(android.view.View.GONE);
         btnTweed.setVisibility(android.view.View.GONE);
@@ -81,7 +95,8 @@ jobs:
         btnNolla.setVisibility(android.view.View.GONE);
         btnResorption.setVisibility(android.view.View.GONE);
         btnPanoramicReview.setVisibility(android.view.View.GONE);
-        findViewById(R.id.sectionPanoramic).setVisibility(android.view.View.GONE);
+        android.view.View panoSection = findViewById(R.id.sectionPanoramic);
+        if (panoSection != null) panoSection.setVisibility(android.view.View.GONE);
 
         updateThemeButton(btnTheme);
 '''
@@ -91,52 +106,17 @@ jobs:
           main.write_text(m, encoding='utf-8')
           PY
 
-      - name: Apply standalone cephalometric branding
+      - name: Apply standalone icon
         shell: bash
         run: |
           cat > app/src/main/res/drawable/ic_yomceph_foreground.xml <<'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp"
-              android:height="108dp"
-              android:viewportWidth="108"
-              android:viewportHeight="108">
-              <path android:fillColor="#FFFFFF" android:pathData="M27,28 C20,31 20,40 22,49 C24,58 27,70 31,75 C34,78 36,75 37,70 L39,62 C40,58 43,58 44,62 L46,70 C47,75 50,76 52,72 C56,65 58,54 59,46 C60,37 58,30 52,27 C48,25 44,28 41,30 C37,27 32,25 27,28 Z" />
-              <path android:fillColor="#22BFC7" android:pathData="M30,43 A2.5,2.5 0,1 0,35,43 A2.5,2.5 0,1 0,30,43 M45,43 A2.5,2.5 0,1 0,50,43 A2.5,2.5 0,1 0,45,43" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#B9F3E6" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M34,52 C37,55 42,55 46,52" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M69,26 C78,24 86,30 88,38 C89,43 87,47 85,50 L91,53 L85,57 L85,62 L80,64 L80,70 L71,73 C65,71 61,66 60,59 C59,51 60,43 63,35 C64,31 66,28 69,26" />
-              <path android:fillColor="#B9F3E6" android:pathData="M72,40 A3,3 0,1 0,78,40 A3,3 0,1 0,72,40" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#22BFC7" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M84,51 L78,52 L74,57" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#22BFC7" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M48,78 L82,78 L82,47 Z" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#B9F3E6" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M62,72 L76,72 L76,59 Z" />
-          </vector>
-          XML
-
-          cat > app/src/main/res/drawable/ic_yomceph_mark.xml <<'XML'
-          <?xml version="1.0" encoding="utf-8"?>
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp"
-              android:height="108dp"
-              android:viewportWidth="108"
-              android:viewportHeight="108">
-              <path android:fillColor="#6842B8" android:pathData="M20,8 L88,8 C95,8 100,13 100,20 L100,88 C100,95 95,100 88,100 L20,100 C13,100 8,95 8,88 L8,20 C8,13 13,8 20,8 Z" />
+              android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
               <path android:fillColor="#FFFFFF" android:pathData="M27,28 C20,31 20,40 22,49 C24,58 27,70 31,75 C34,78 36,75 37,70 L39,62 C40,58 43,58 44,62 L46,70 C47,75 50,76 52,72 C56,65 58,54 59,46 C60,37 58,30 52,27 C48,25 44,28 41,30 C37,27 32,25 27,28 Z" />
               <path android:fillColor="#22BFC7" android:pathData="M30,43 A2.5,2.5 0,1 0,35,43 A2.5,2.5 0,1 0,30,43 M45,43 A2.5,2.5 0,1 0,50,43 A2.5,2.5 0,1 0,45,43" />
               <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M69,26 C78,24 86,30 88,38 C89,43 87,47 85,50 L91,53 L85,57 L85,62 L80,64 L80,70 L71,73 C65,71 61,66 60,59 C59,51 60,43 63,35 C64,31 66,28 69,26 M48,78 L82,78 L82,47 Z" />
-          </vector>
-          XML
-
-          cp app/src/main/res/drawable/ic_yomceph_mark.xml app/src/main/res/mipmap-anydpi/ic_launcher.xml
-
-          cat > app/src/main/res/drawable/ic_yomceph_monochrome.xml <<'XML'
-          <?xml version="1.0" encoding="utf-8"?>
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp"
-              android:height="108dp"
-              android:viewportWidth="108"
-              android:viewportHeight="108">
-              <path android:fillColor="#000000" android:pathData="M27,28 C20,31 20,40 22,49 C24,58 27,70 31,75 C34,78 36,75 37,70 L39,62 C40,58 43,58 44,62 L46,70 C47,75 50,76 52,72 C56,65 58,54 59,46 C60,37 58,30 52,27 C48,25 44,28 41,30 C37,27 32,25 27,28 Z" />
-              <path android:fillColor="@android:color/transparent" android:strokeColor="#000000" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M69,26 C78,24 86,30 88,38 C89,43 87,47 85,50 L91,53 L85,57 L85,62 L80,64 L80,70 L71,73 C65,71 61,66 60,59 C59,51 60,43 63,35 C64,31 66,28 69,26 M48,78 L82,78 L82,47 Z" />
+              <path android:fillColor="@android:color/transparent" android:strokeColor="#22BFC7" android:strokeWidth="4" android:strokeLineCap="round" android:pathData="M48,78 L82,78 L82,47" />
           </vector>
           XML
 
@@ -161,17 +141,25 @@ jobs:
         run: gradle --no-daemon :app:testDebugUnitTest
 
       - name: Run Android lint
-        run: gradle --no-daemon :app:lintDebug
+        shell: bash
+        run: |
+          set +e
+          gradle --no-daemon :app:lintDebug
+          STATUS=$?
+          if [ $STATUS -ne 0 ]; then
+            test -f app/build/reports/lint-results-debug.txt && grep -n -A4 -B2 "Error:" app/build/reports/lint-results-debug.txt || true
+            exit $STATUS
+          fi
 
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk YomCeph-Cefalometrico-v1.23-test.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Yom-Analisis-Radiograficos-Steiner-v1.24-test.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: YomCeph-Cefalometrico-v1.23-Test-APK
-          path: YomCeph-Cefalometrico-v1.23-test.apk
+          name: Yom-Analisis-Radiograficos-Steiner-v1.24-Test-APK
+          path: Yom-Analisis-Radiograficos-Steiner-v1.24-test.apk
           if-no-files-found: error
