@@ -1,0 +1,97 @@
+name: Build YomCeph Cefalometrico APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validated YomCeph source
+        uses: actions/checkout@v4
+        with:
+          repository: yomismtz/-ngulos-cefalometricos
+          ref: redesign/flujo-puntos-y-guias
+
+      - name: Apply current clinical and partial-result fixes
+        run: python3 ci/prepare-test-build.py
+
+      - name: Convert to single cephalometric module
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          gradle = Path('app/build.gradle')
+          g = gradle.read_text(encoding='utf-8')
+          g = g.replace("applicationId 'com.yomceph.app'", "applicationId 'com.yomceph.cefalometrico'")
+          gradle.write_text(g, encoding='utf-8')
+
+          for path in [Path('app/src/main/res/values/strings.xml'), Path('app/src/main/res/values-en/strings.xml')]:
+              s = path.read_text(encoding='utf-8')
+              if 'values-en' in str(path):
+                  s = s.replace('<string name="app_name">YomCeph</string>', '<string name="app_name">YomCeph Cephalometric</string>')
+                  s = s.replace('<string name="app_slogan">Trace. Measure. Learn.</string>', '<string name="app_slogan">Cephalometric analysis</string>')
+                  s = s.replace('<string name="analysis_steiner">', '<string name="analysis_steiner">CEPHALOMETRIC ANALYSIS<!--')
+                  s = s.replace('</string>', '--></string>', 1) if '<!--' in s.split('\n')[4] else s
+              else:
+                  s = s.replace('<string name="app_name">YomCeph</string>', '<string name="app_name">YomCeph Cefalométrico</string>')
+                  s = s.replace('<string name="app_slogan">Traza. Mide. Aprende.</string>', '<string name="app_slogan">Análisis cefalométrico</string>')
+                  # Replace the current label regardless of author naming.
+                  import re
+                  s = re.sub(r'<string name="analysis_steiner">.*?</string>', '<string name="analysis_steiner">ANÁLISIS CEFALOMÉTRICO</string>', s)
+              path.write_text(s, encoding='utf-8')
+
+          # English label separately, avoiding XML comments.
+          en = Path('app/src/main/res/values-en/strings.xml')
+          s = en.read_text(encoding='utf-8')
+          import re
+          s = re.sub(r'<string name="analysis_steiner">.*?</string>', '<string name="analysis_steiner">CEPHALOMETRIC ANALYSIS</string>', s)
+          s = s.replace('<!--', '').replace('-->', '')
+          en.write_text(s, encoding='utf-8')
+
+          main = Path('app/src/main/java/com/cefalo/angulos/MainActivity.java')
+          m = main.read_text(encoding='utf-8')
+          anchor = '        TextView btnTheme = findViewById(R.id.btnTheme);\n'
+          hide = '''        TextView btnTheme = findViewById(R.id.btnTheme);\n\n        // Edición de módulo único: conserva utilidades, estudios y privacidad,\n        // pero no expone los otros módulos clínicos.\n        btnVertebral.setVisibility(android.view.View.GONE);\n        btnPowell.setVisibility(android.view.View.GONE);\n        btnTweed.setVisibility(android.view.View.GONE);\n        btnLevandoski.setVisibility(android.view.View.GONE);\n        btnAirway.setVisibility(android.view.View.GONE);\n'''
+          if anchor in m:
+              m = m.replace(anchor, hide, 1)
+          main.write_text(m, encoding='utf-8')
+          PY
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 16 SDK
+        run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Test and build debug APK
+        run: |
+          gradle --no-daemon :app:testDebugUnitTest
+          gradle --no-daemon :app:assembleDebug
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk YomCeph-Cefalometrico-test.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: YomCeph-Cefalometrico-Test-APK
+          path: YomCeph-Cefalometrico-test.apk
+          if-no-files-found: error
