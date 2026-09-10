@@ -1,4 +1,4 @@
-name: Build Yom Radiographic Steiner APK
+name: Build Yom lateral skull analysis APK
 
 on:
   workflow_dispatch:
@@ -50,7 +50,7 @@ jobs:
       - name: Generate dedicated tablet layout
         run: python3 ci/mobile-responsive-layouts.py
 
-      - name: Convert to Steiner-only edition
+      - name: Convert to Steiner-only lateral skull edition
         run: python3 ci/prepare-steiner-only.py
 
       - name: Set up Java 17
@@ -88,11 +88,11 @@ jobs:
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Yom-Analisis-Radiograficos-Steiner-v1.24-test.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Yom-analisis-de-lateral-de-craneo-v1.25-test.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Yom-Analisis-Radiograficos-Steiner-v1.24-Test-APK
-          path: Yom-Analisis-Radiograficos-Steiner-v1.24-test.apk
+          name: Yom-analisis-de-lateral-de-craneo-v1.25-Test-APK
+          path: Yom-analisis-de-lateral-de-craneo-v1.25-test.apk
           if-no-files-found: error
