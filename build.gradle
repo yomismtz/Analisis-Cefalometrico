@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.yomceph'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnit()
+}
