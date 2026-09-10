@@ -75,6 +75,10 @@ public final class CephalometricReferenceCatalog {
                     "32° ± 4°",
                     "Divergencia del plano mandibular respecto a SN."),
 
+            m("Y_AXIS", "Eje Y · NS / S-Gn", Geometry.TWO_LINE_ANGLE, p("N", "S", "S", "Gn"), 65.0, 3.0, "°",
+                    "65° ± 3°",
+                    "Dirección de crecimiento facial respecto a la base craneal; interpretar junto con otras variables verticales."),
+
             m("OP_SN", "Plano oclusal / SN", Geometry.TWO_LINE_ANGLE, p("Oclusal 1", "Oclusal 2", "S", "N"), 14.0, 3.0, "°",
                     "14° ± 3°",
                     "Inclinación del plano oclusal respecto a SN."),
@@ -94,6 +98,10 @@ public final class CephalometricReferenceCatalog {
             m("INTERINCISAL", "Ángulo interincisal", Geometry.TWO_LINE_ANGLE, p("IS borde", "IS ápice", "II borde", "II ápice"), 131.0, 4.0, "°",
                     "131° ± 4°",
                     "Relación angular entre los ejes de los incisivos superior e inferior."),
+
+            m("GONIAL", "Ángulo goníaco Ar-Go-Me · complementario", Geometry.THREE_POINT_ANGLE, p("Ar", "Go", "Me"), 130.0, 7.0, "°",
+                    "130° ± 7° (123°–137°) · referencia complementaria Björk-Jarabak",
+                    "Describe la morfología angular mandibular; no pertenece al bloque clásico de Steiner y debe interpretarse como medida complementaria."),
 
             m("SL", "Segmento SL", Geometry.AXIAL_PROJECTION, p("S", "N", "Pg"), 51.0, 4.0, "mm",
                     "51 ± 4 mm",
