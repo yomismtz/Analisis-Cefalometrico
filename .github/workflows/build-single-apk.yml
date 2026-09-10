@@ -28,6 +28,9 @@ jobs:
       - name: Apply clinical extensions and visual guides
         run: python3 ci/extend-clinical-build.py
 
+      - name: Diagnose uncalculated measurements
+        run: python3 ci/fix-result-diagnostics.py
+
       - name: Convert to single cephalometric module
         shell: bash
         run: |
@@ -82,11 +85,9 @@ jobs:
               <path android:fillColor="#FFFFFF" android:pathData="M27,28 C20,31 20,40 22,49 C24,58 27,70 31,75 C34,78 36,75 37,70 L39,62 C40,58 43,58 44,62 L46,70 C47,75 50,76 52,72 C56,65 58,54 59,46 C60,37 58,30 52,27 C48,25 44,28 41,30 C37,27 32,25 27,28 Z" />
               <path android:fillColor="#22BFC7" android:pathData="M30,43 A2.5,2.5 0,1 0,35,43 A2.5,2.5 0,1 0,30,43 M45,43 A2.5,2.5 0,1 0,50,43 A2.5,2.5 0,1 0,45,43" />
               <path android:fillColor="@android:color/transparent" android:strokeColor="#B9F3E6" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M34,52 C37,55 42,55 46,52" />
-
               <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M69,26 C78,24 86,30 88,38 C89,43 87,47 85,50 L91,53 L85,57 L85,62 L80,64 L80,70 L71,73 C65,71 61,66 60,59 C59,51 60,43 63,35 C64,31 66,28 69,26" />
               <path android:fillColor="#B9F3E6" android:pathData="M72,40 A3,3 0,1 0,78,40 A3,3 0,1 0,72,40" />
               <path android:fillColor="@android:color/transparent" android:strokeColor="#22BFC7" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M84,51 L78,52 L74,57" />
-
               <path android:fillColor="@android:color/transparent" android:strokeColor="#22BFC7" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M48,78 L82,78 L82,47 Z" />
               <path android:fillColor="@android:color/transparent" android:strokeColor="#B9F3E6" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M62,72 L76,72 L76,59 Z" />
               <path android:strokeColor="#FFFFFF" android:strokeWidth="1.4" android:strokeLineCap="round" android:fillColor="@android:color/transparent" android:pathData="M55,77 L55,73 M62,77 L62,74 M69,77 L69,73 M76,77 L76,74" />
