@@ -101,6 +101,10 @@ jobs:
         working-directory: source
         run: python3 ../standalone/ci/sassouni-architecture.py
 
+      - name: Polish integrated reports and references
+        working-directory: source
+        run: python3 ../standalone/ci/final-integrated-ceph-polish.py
+
       - name: Keep CVM skeletal maturation accessible
         working-directory: source
         run: python3 ../standalone/ci/restore-cvm-access.py
