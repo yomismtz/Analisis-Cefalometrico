@@ -44,7 +44,7 @@ if 'Holdaway · ángulo H' not in c:
                 "",
                 "Describe la inclinación global del perfil blando. Interpretar como parte del análisis de Holdaway, no como diagnóstico aislado.",
                 "",
-                true
+                false
         ));
 '''
     c, n = method.subn(lambda m: m.group(1) + addition + m.group(2), c, count=1)
@@ -240,15 +240,27 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 public class PrimarySourceSoftTissueAndRickettsTest {
+    private static boolean hasAngular(String token) {
+        for (MeasurementDefinition def : MeasurementCatalog.steiner()) {
+            if (def != null && def.name.contains(token)) return true;
+        }
+        return false;
+    }
+
+    private static boolean hasLinear(String token) {
+        for (LinearMeasurementDefinition def : LinearMeasurementCatalog.cephalometric()) {
+            if (def != null && def.name.contains(token)) return true;
+        }
+        return false;
+    }
+
     @Test public void verifiedAdditionalMeasuresArePresent() {
-        String angular = MeasurementCatalog.steiner().toString();
-        String linear = LinearMeasurementCatalog.cephalometric().toString();
-        assertTrue(angular.contains("Holdaway · ángulo H"));
-        assertTrue(linear.contains("Steiner · Pogonion a NB"));
-        assertTrue(linear.contains("Ricketts · convexidad"));
-        assertTrue(linear.contains("Ricketts · U1 a A-Pg"));
-        assertTrue(linear.contains("Ricketts · L1 a A-Pg"));
-        assertTrue(linear.contains("Holdaway · labio inferior a línea H"));
+        assertTrue(hasAngular("Holdaway · ángulo H"));
+        assertTrue(hasLinear("Steiner · Pogonion a NB"));
+        assertTrue(hasLinear("Ricketts · convexidad"));
+        assertTrue(hasLinear("Ricketts · U1 a A-Pg"));
+        assertTrue(hasLinear("Ricketts · L1 a A-Pg"));
+        assertTrue(hasLinear("Holdaway · labio inferior a línea H"));
         assertTrue(LinearMeasurementDefinition.Type.valueOf("ANATOMICAL_PERPENDICULAR") != null);
     }
 }
