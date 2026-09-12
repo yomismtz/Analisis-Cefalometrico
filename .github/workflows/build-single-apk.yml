@@ -89,6 +89,10 @@ jobs:
         working-directory: source
         run: python3 ../standalone/ci/primary-source-ceph-audit.py
 
+      - name: Apply verified Ricketts, Steiner and Holdaway extensions
+        working-directory: source
+        run: python3 ../standalone/ci/primary-source-ceph-audit-extra.py
+
       - name: Apply distinct lateral-skull launcher icon
         working-directory: source
         run: python3 ../standalone/ci/apply-lateral-icon.py
